@@ -1,121 +1,43 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useState } from 'react';
 import { Coordinates } from '../types';
 
-interface GeolocationState {
-  coordinates: Coordinates | null;
-  error: string | null;
-  loading: boolean;
-}
-
-interface UseGeolocationOptions {
-  enableHighAccuracy?: boolean;
-  timeout?: number;
-  maximumAge?: number;
-  watchPosition?: boolean;
-}
-
-const defaultOptions: UseGeolocationOptions = {
-  enableHighAccuracy: true,
-  timeout: 15000,
-  maximumAge: 0,
-  watchPosition: true
-};
-
-export const useGeolocation = (options: UseGeolocationOptions = {}) => {
-  const [state, setState] = useState<GeolocationState>({
-    coordinates: null,
-    error: null,
-    loading: true
-  });
-
-  const mergedOptions = { ...defaultOptions, ...options };
+export const useGeolocation = () => {
+  const [location, setLocation] = useState<Coordinates | null>(null);
+  const [error, setError] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (!navigator.geolocation) {
-      setState(prev => ({
-        ...prev,
-        error: 'Geolocation is not supported by your browser',
-        loading: false
-      }));
+      setError('Geolocation is not supported by your browser');
+      setLoading(false);
       return;
     }
 
-    const onSuccess = (position: GeolocationPosition) => {
-      setState({
-        coordinates: {
-          lat: position.coords.latitude,
-          lng: position.coords.longitude
-        },
-        error: null,
-        loading: false
+    const success = (position: GeolocationPosition) => {
+      setLocation({
+        lat: position.coords.latitude,
+        lng: position.coords.longitude
       });
+      setLoading(false);
     };
 
-    const onError = (error: GeolocationPositionError) => {
-      setState(prev => ({
-        ...prev,
-        error: error.message,
-        loading: false
-      }));
+    const error = () => {
+      setError('Unable to retrieve your location');
+      setLoading(false);
     };
 
-    const geolocationOptions: PositionOptions = {
-      enableHighAccuracy: mergedOptions.enableHighAccuracy,
-      timeout: mergedOptions.timeout,
-      maximumAge: mergedOptions.maximumAge
+    const options = {
+      enableHighAccuracy: true,
+      timeout: 5000,
+      maximumAge: 0
     };
 
-    let watchId: number | null = null;
+    navigator.geolocation.getCurrentPosition(success, error, options);
 
-    if (mergedOptions.watchPosition) {
-      watchId = navigator.geolocation.watchPosition(
-        onSuccess,
-        onError,
-        geolocationOptions
-      );
-    } else {
-      navigator.geolocation.getCurrentPosition(
-        onSuccess,
-        onError,
-        geolocationOptions
-      );
-    }
+    const watchId = navigator.geolocation.watchPosition(success, error, options);
 
-    return () => {
-      if (watchId !== null) {
-        navigator.geolocation.clearWatch(watchId);
-      }
-    };
-  }, [mergedOptions.enableHighAccuracy, mergedOptions.timeout, mergedOptions.maximumAge, mergedOptions.watchPosition]);
+    return () => navigator.geolocation.clearWatch(watchId);
+  }, []);
 
-  const requestPermission = () => {
-    setState(prev => ({ ...prev, loading: true }));
-    
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        setState({
-          coordinates: {
-            lat: position.coords.latitude,
-            lng: position.coords.longitude
-          },
-          error: null,
-          loading: false
-        });
-      },
-      (error) => {
-        setState(prev => ({
-          ...prev,
-          error: error.message,
-          loading: false
-        }));
-      },
-      {
-        enableHighAccuracy: mergedOptions.enableHighAccuracy,
-        timeout: mergedOptions.timeout,
-        maximumAge: mergedOptions.maximumAge
-      }
-    );
-  };
-
-  return { ...state, requestPermission };
+  return { location, error, loading };
 };

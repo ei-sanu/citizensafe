@@ -14,7 +14,7 @@ import Map from './components/Map';
 import NearbyServicesPanel from './components/NearbyServicesPanel';
 import SafetyProtocols from './components/SafetyProtocols';
 
-function App() {
+const App = () => {
   const [showPermissionModal, setShowPermissionModal] = useState<boolean>(true);
   const [nearbyPlaces, setNearbyPlaces] = useState<NearbyPlace[]>([]);
   const [placesLoading, setPlacesLoading] = useState<boolean>(false);
@@ -22,12 +22,12 @@ function App() {
   const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
   const [showMenu, setShowMenu] = useState<boolean>(false);
 
-  const { coordinates, error, loading, requestPermission } = useGeolocation();
+  const { location, error: locationError, loading: locationLoading } = useGeolocation();
 
   // Load nearby places when coordinates change
   useEffect(() => {
     const loadNearbyPlaces = async () => {
-      if (!coordinates || !mapInstance) return;
+      if (!location || !mapInstance) return;
 
       setPlacesLoading(true);
       setPlacesError(null);
@@ -36,14 +36,14 @@ function App() {
         // Load police stations
         const policeStations = await searchNearbyPlaces(
           mapInstance,
-          coordinates,
+          location,
           'police'
         );
 
         // Load hospitals
         const hospitals = await searchNearbyPlaces(
           mapInstance,
-          coordinates,
+          location,
           'hospital'
         );
 
@@ -61,7 +61,7 @@ function App() {
     };
 
     loadNearbyPlaces();
-  }, [coordinates, mapInstance]);
+  }, [location, mapInstance]);
 
   const handleMapLoad = (map: google.maps.Map) => {
     setMapInstance(map);
@@ -111,19 +111,24 @@ function App() {
                   <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                     <div className="lg:col-span-2">
                       <div className="h-80 md:h-96 lg:h-[500px]">
+                        {locationError && (
+                          <div className="bg-cyber-red-500 bg-opacity-10 border border-cyber-red-500 p-4 m-4 rounded">
+                            <p className="text-white">{locationError}</p>
+                          </div>
+                        )}
                         <Map
-                          userLocation={coordinates}
+                          userLocation={location}
                           nearbyPlaces={nearbyPlaces}
-                          isLoading={loading || placesLoading}
+                          isLoading={locationLoading || placesLoading}
                         />
                       </div>
                     </div>
 
                     <div className="space-y-6">
-                      <EmergencyButtons userLocation={coordinates} />
+                      <EmergencyButtons userLocation={location} />
                       <NearbyServicesPanel
                         places={nearbyPlaces}
-                        isLoading={loading || placesLoading}
+                        isLoading={locationLoading || placesLoading}
                         error={placesError}
                       />
                     </div>
@@ -163,14 +168,14 @@ function App() {
         <Footer />
 
         <LocationPermissionModal
-          onRequestPermission={requestPermission}
-          permissionDenied={!!error}
-          isVisible={showPermissionModal && (!coordinates || !!error)}
+          onRequestPermission={() => { }}
+          permissionDenied={!!locationError}
+          isVisible={showPermissionModal && (!location || !!locationError)}
           onClose={() => setShowPermissionModal(false)}
         />
       </div>
     </Router>
   );
-}
+};
 
 export default App;

@@ -1,8 +1,8 @@
-import React, { useState, useEffect, useCallback } from 'react';
-import { GoogleMap, LoadScript, Marker, InfoWindow } from '@react-google-maps/api';
-import { MapPin, AlertCircle } from 'lucide-react';
+import { GoogleMap, InfoWindow, LoadScript, Marker } from '@react-google-maps/api';
+import { AlertCircle, MapPin } from 'lucide-react';
+import React, { useCallback, useEffect, useState } from 'react';
+import { CYBERPUNK_MAP_STYLE, DEFAULT_CENTER, GOOGLE_MAPS_API_KEY } from '../constants';
 import { Coordinates, NearbyPlace } from '../types';
-import { GOOGLE_MAPS_API_KEY, DEFAULT_CENTER, CYBERPUNK_MAP_STYLE } from '../constants';
 
 interface MapProps {
   userLocation: Coordinates | null;
@@ -18,7 +18,8 @@ const mapContainerStyle = {
 const Map: React.FC<MapProps> = ({ userLocation, nearbyPlaces, isLoading }) => {
   const [mapInstance, setMapInstance] = useState<google.maps.Map | null>(null);
   const [selectedPlace, setSelectedPlace] = useState<NearbyPlace | null>(null);
-  
+  const [mapsError, setMapsError] = useState<string | null>(null);
+
   const center = userLocation || DEFAULT_CENTER;
 
   const onMapLoad = useCallback((map: google.maps.Map) => {
@@ -33,6 +34,11 @@ const Map: React.FC<MapProps> = ({ userLocation, nearbyPlaces, isLoading }) => {
       fullscreenControl: false,
     });
   }, []);
+
+  const handleLoadError = (error: Error) => {
+    console.error('Maps loading error:', error);
+    setMapsError('Failed to load Google Maps');
+  };
 
   useEffect(() => {
     if (mapInstance && userLocation) {
@@ -60,7 +66,17 @@ const Map: React.FC<MapProps> = ({ userLocation, nearbyPlaces, isLoading }) => {
   };
 
   return (
-    <div className="map-container">
+    <div className="map-container relative">
+      {mapsError && (
+        <div className="absolute inset-0 bg-cyber-black bg-opacity-90 flex items-center justify-center z-20">
+          <div className="text-cyber-red-500 font-tech p-4 text-center">
+            <AlertCircle size={24} className="mx-auto mb-2" />
+            <p>{mapsError}</p>
+            <p className="text-sm mt-2">Please check your internet connection and try again.</p>
+          </div>
+        </div>
+      )}
+
       {isLoading && (
         <div className="absolute inset-0 bg-cyber-black bg-opacity-70 flex items-center justify-center z-10">
           <div className="text-cyber-green-500 font-tech animate-pulse flex flex-col items-center">
@@ -69,10 +85,11 @@ const Map: React.FC<MapProps> = ({ userLocation, nearbyPlaces, isLoading }) => {
           </div>
         </div>
       )}
-      
+
       <LoadScript
         googleMapsApiKey={GOOGLE_MAPS_API_KEY}
         libraries={['places']}
+        onError={handleLoadError}
       >
         <GoogleMap
           mapContainerStyle={mapContainerStyle}
@@ -120,7 +137,7 @@ const Map: React.FC<MapProps> = ({ userLocation, nearbyPlaces, isLoading }) => {
                     </span>
                   )}
                 </p>
-                <a 
+                <a
                   href={`https://www.google.com/maps/dir/?api=1&destination=${selectedPlace.location.lat},${selectedPlace.location.lng}&destination_place_id=${selectedPlace.placeId}`}
                   target="_blank"
                   rel="noopener noreferrer"
