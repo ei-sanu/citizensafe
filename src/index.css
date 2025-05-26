@@ -1,0 +1,119 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  body {
+    @apply bg-cyber-black text-white font-rajdhani;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-rajdhani font-bold;
+  }
+
+  button {
+    @apply transition-all duration-300;
+  }
+}
+
+@layer components {
+  .cyber-border {
+    @apply border-2 border-cyber-green-500 relative;
+    box-shadow: 0 0 10px theme('colors.cyber-green.500');
+  }
+
+  .cyber-border::before {
+    content: '';
+    @apply absolute top-0 left-0 w-2 h-2 bg-cyber-green-500;
+  }
+
+  .cyber-border::after {
+    content: '';
+    @apply absolute top-0 right-0 w-2 h-2 bg-cyber-green-500;
+  }
+
+  .cyber-border-red {
+    @apply border-2 border-cyber-red-500 relative;
+    box-shadow: 0 0 10px theme('colors.cyber-red.500');
+  }
+
+  .emergency-btn {
+    @apply text-white py-3 px-6 uppercase font-tech tracking-wide font-bold
+           flex items-center justify-center gap-2 transition-all duration-300
+           transform hover:scale-105 active:scale-95;
+  }
+
+  .call-btn {
+    @apply emergency-btn bg-cyber-red-500 hover:bg-cyber-red-600 shadow-neon-red;
+  }
+  
+  .alert-btn {
+    @apply emergency-btn bg-cyber-yellow-500 hover:bg-cyber-yellow-600 text-cyber-black;
+  }
+
+  .location-btn {
+    @apply emergency-btn bg-cyber-blue-500 hover:bg-cyber-blue-600 text-cyber-black;
+  }
+
+  .cyber-panel {
+    @apply bg-cyber-dark bg-opacity-90 backdrop-blur-sm p-4 rounded-md 
+           border border-cyber-green-500;
+  }
+
+  .cyber-panel-title {
+    @apply text-cyber-green-500 font-tech uppercase text-sm mb-2 tracking-wider;
+  }
+
+  .place-item {
+    @apply flex items-center border-b border-cyber-gray p-2 hover:bg-cyber-gray transition-colors;
+  }
+
+  .place-item-name {
+    @apply text-white font-medium;
+  }
+
+  .place-item-distance {
+    @apply text-cyber-green-300 text-sm ml-auto;
+  }
+
+  /* Custom map styles */
+  .map-container {
+    @apply w-full h-full relative rounded-md overflow-hidden cyber-border;
+    min-height: 300px;
+  }
+}
+
+/* Scrollbar styling */
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  @apply bg-cyber-dark;
+}
+
+::-webkit-scrollbar-thumb {
+  @apply bg-cyber-green-500 rounded-full;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  @apply bg-cyber-green-400;
+}
+
+/* Glitch animation for text */
+.glitch {
+  position: relative;
+  animation: glitch 1s linear infinite;
+}
+
+@keyframes glitch {
+  2%, 64% {
+    transform: translate(2px, 0) skew(0deg);
+  }
+  4%, 60% {
+    transform: translate(-2px, 0) skew(0deg);
+  }
+  62% {
+    transform: translate(0, 0) skew(5deg);
+  }
+}
